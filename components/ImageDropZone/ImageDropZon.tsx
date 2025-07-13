@@ -1,9 +1,10 @@
 "use client";
 
-import Cropper from "react-easy-crop";
 import { useState } from "react";
 import getCroppedImg from "@/lib/cropImage";
-import imageCompression from "browser-image-compression";
+import BannerCropper from "./BannerCropper";
+import ScaleSlider from "./ScaleSlider";
+import DropZone from "./DropZone";
 
 export default function ImageDropZone() {
   const [image, setImage] = useState<string | null>(null);
@@ -24,29 +25,11 @@ export default function ImageDropZone() {
     reader.readAsDataURL(file);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith("image/")) {
-      handleFile(file);
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.type.startsWith("image/")) {
-      handleFile(file);
-    }
-  };
-
   const compressImage = async (url: string): Promise<Blob> => {
     const response = await fetch(url);
     const blob = await response.blob();
     const img = await createImageBitmap(blob);
 
-    console.log("[compressImage] before:", img.width, img.height);
-
-    // Створюємо canvas з оригінальними розмірами
     const canvas = document.createElement("canvas");
     canvas.width = img.width;
     canvas.height = img.height;
@@ -56,81 +39,52 @@ export default function ImageDropZone() {
     let quality = 1;
     let step = 0.05;
     const maxSizeBytes = 750 * 1024;
-    let attempt = 0;
     const minQuality = 0.1;
     let resultBlob: Blob | null = null;
+    let attempt = 0;
 
     while (true) {
-      // Конвертуємо canvas у JPEG Blob з заданою якістю
       resultBlob = await new Promise<Blob | null>((resolve) => {
         canvas.toBlob((blob) => resolve(blob), "image/jpeg", quality);
       });
-
       if (!resultBlob) throw new Error("Failed to create blob");
-
-      console.log(`[compressImage] try quality=${quality.toFixed(2)} size=${resultBlob.size}`);
-
       if (resultBlob.size <= maxSizeBytes || quality <= minQuality) break;
-
       quality -= step;
       if (quality < minQuality) quality = minQuality;
       attempt++;
       if (attempt > 20) break;
     }
-
-    // Фінальна перевірка розмірів
-    const finalImg = await createImageBitmap(resultBlob);
-    console.log("[compressImage] after:", finalImg.width, finalImg.height);
-
-    if (finalImg.width !== img.width || finalImg.height !== img.height) {
-      console.error("Помилка: розміри змінилися!");
-      // У цьому підході цього не повинно статися
-    }
-
     return resultBlob;
   };
 
   const showCropped = async () => {
     if (!image) return;
-
-    // 1. Читаємо текст із буфера
     let clipboardText = "";
     try {
       clipboardText = await navigator.clipboard.readText();
-    } catch (err) {
-      console.warn("Не вдалося прочитати з буфера:", err);
-    }
-
-    // 2. Готуємо кропнуті JPEG
+    } catch {}
     const cropped1Url = await getCroppedImg(image, croppedAreaPixels1, "banner-800x256", {
       width: 1600,
       height: 512,
       format: "image/jpeg",
     });
-
     const cropped2Url = await getCroppedImg(image, croppedAreaPixels2, "banner-500x256", {
       width: 1000,
       height: 512,
       format: "image/jpeg",
     });
-
     const compressedBlob1 = await compressImage(cropped1Url);
     const compressedBlob2 = await compressImage(cropped2Url);
-
-    // 3. Сформуємо імена з буфера
     const safeText = clipboardText
       .trim()
       .replaceAll(/\s+/g, "_")
       .replaceAll(/[^\w\-]/g, "");
     const filename1 = `1600_${safeText || "banner1"}.jpg`;
     const filename2 = `1000_${safeText || "banner2"}.jpg`;
-
-    // 4. Скачуємо
     const link1 = document.createElement("a");
     link1.download = filename1;
     link1.href = URL.createObjectURL(compressedBlob1);
     link1.click();
-
     const link2 = document.createElement("a");
     link2.download = filename2;
     link2.href = URL.createObjectURL(compressedBlob2);
@@ -139,76 +93,39 @@ export default function ImageDropZone() {
 
   return (
     <div className="flex flex-col items-center gap-6 p-4 w-full max-w-4xl mx-auto">
-      <div
-        onDrop={handleDrop}
-        onDragOver={(e) => e.preventDefault()}
-        className="w-full h-12 border-2 border-dashed border-gray-400 rounded-xl flex items-center justify-center text-gray-500 cursor-pointer"
-      >
-        <label className="w-full h-full flex items-center justify-center cursor-pointer">
-          <input type="file" accept="image/*" onChange={handleChange} className="hidden" />
-          {image ? <span>Зображення завантажено 👇</span> : <span>Перетягни сюди зображення або клікни</span>}
-        </label>
-      </div>
+      <DropZone onFile={handleFile} imageLoaded={!!image} />
 
       {image && (
         <>
           {/* Crop 1 */}
-          <div className="w-full h-[300px] relative rounded-md overflow-hidden border shadow-sm">
-            <Cropper
-              image={image}
-              crop={crop1}
-              zoom={zoom1}
-              aspect={800 / 256}
-              onCropChange={setCrop1}
-              onZoomChange={setZoom1}
-              onCropComplete={(_, cropped) => setCroppedAreaPixels1(cropped)}
-            />
-          </div>
-          <div className="w-full mt-2 flex items-center gap-3 text-sm text-gray-700">
-            <label className="w-24 shrink-0">Масштаб (1):</label>
-            <input
-              type="range"
-              min={1}
-              max={3}
-              step={0.01}
-              value={zoom1}
-              onChange={(e) => setZoom1(Number(e.target.value))}
-              className="flex-grow accent-green-600"
-            />
-            <span className="w-10 text-end text-gray-500">{zoom1.toFixed(1)}x</span>
-          </div>
+          <BannerCropper
+            image={image}
+            crop={crop1}
+            zoom={zoom1}
+            aspect={800 / 256}
+            onCropChange={setCrop1}
+            onZoomChange={setZoom1}
+            onCropComplete={(_, cropped) => setCroppedAreaPixels1(cropped)}
+          />
+          <ScaleSlider label="Масштаб (1):" value={zoom1} onChange={setZoom1} />
 
           {/* Crop 2 */}
-          <div className="w-full h-[300px] relative rounded-md overflow-hidden border shadow-sm">
-            <Cropper
-              image={image}
-              crop={crop2}
-              zoom={zoom2}
-              aspect={500 / 256}
-              onCropChange={setCrop2}
-              onZoomChange={setZoom2}
-              onCropComplete={(_, cropped) => setCroppedAreaPixels2(cropped)}
-            />
-          </div>
-          <div className="w-full mt-2 flex items-center gap-3 text-sm text-gray-700">
-            <label className="w-24 shrink-0">Масштаб (2):</label>
-            <input
-              type="range"
-              min={1}
-              max={3}
-              step={0.01}
-              value={zoom2}
-              onChange={(e) => setZoom2(Number(e.target.value))}
-              className="flex-grow accent-green-600"
-            />
-            <span className="w-10 text-end text-gray-500">{zoom2.toFixed(1)}x</span>
-          </div>
+          <BannerCropper
+            image={image}
+            crop={crop2}
+            zoom={zoom2}
+            aspect={500 / 256}
+            onCropChange={setCrop2}
+            onZoomChange={setZoom2}
+            onCropComplete={(_, cropped) => setCroppedAreaPixels2(cropped)}
+          />
+          <ScaleSlider label="Масштаб (2):" value={zoom2} onChange={setZoom2} />
 
           <button
             onClick={showCropped}
             className="mt-6 px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 shadow-md"
           >
-            Завантажити PNG
+            Завантажити JPEG
           </button>
         </>
       )}
