@@ -20,7 +20,7 @@ export default function BannerCropper({
   onCropComplete,
 }: BannerCropperProps) {
   return (
-    <div className="w-full h-[300px] relative rounded-md overflow-hidden border shadow-sm">
+    <div className="w-full h-[300px] relative rounded-xl overflow-hidden border border-card bg-card shadow-sm">
       <Cropper
         image={image}
         crop={crop}

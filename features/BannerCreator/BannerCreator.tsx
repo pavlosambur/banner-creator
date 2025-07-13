@@ -3,6 +3,7 @@ import BannerCropper from "@/components/BannerCropper";
 import DropZone from "@/components/DropZone";
 import ScaleSlider from "@/components/ScaleSlider";
 import getCroppedImg from "@/lib/cropImage";
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
 export default function BannerCreator() {
@@ -13,6 +14,7 @@ export default function BannerCreator() {
   const [crop2, setCrop2] = useState({ x: 0, y: 0 });
   const [zoom2, setZoom2] = useState(1);
   const [croppedAreaPixels2, setCroppedAreaPixels2] = useState<any>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleFile = (file: File) => {
     const reader = new FileReader();
@@ -52,7 +54,8 @@ export default function BannerCreator() {
   };
 
   const showCropped = async () => {
-    if (!image) return;
+    if (!image || isProcessing) return;
+    setIsProcessing(true);
     let clipboardText = "";
     try {
       clipboardText = await navigator.clipboard.readText();
@@ -83,6 +86,7 @@ export default function BannerCreator() {
     link2.download = filename2;
     link2.href = URL.createObjectURL(compressedBlob2);
     link2.click();
+    setIsProcessing(false);
   };
 
   return (
@@ -99,7 +103,7 @@ export default function BannerCreator() {
             onZoomChange={setZoom1}
             onCropComplete={(_, cropped) => setCroppedAreaPixels1(cropped)}
           />
-          <ScaleSlider label="Масштаб (1):" value={zoom1} onChange={setZoom1} />
+          <ScaleSlider label="Масштаб:" value={zoom1} onChange={setZoom1} />
           <BannerCropper
             image={image}
             crop={crop2}
@@ -109,13 +113,10 @@ export default function BannerCreator() {
             onZoomChange={setZoom2}
             onCropComplete={(_, cropped) => setCroppedAreaPixels2(cropped)}
           />
-          <ScaleSlider label="Масштаб (2):" value={zoom2} onChange={setZoom2} />
-          <button
-            onClick={showCropped}
-            className="mt-6 px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 shadow-md"
-          >
-            Завантажити JPEG
-          </button>
+          <ScaleSlider label="Масштаб:" value={zoom2} onChange={setZoom2} />
+          <Button onClick={showCropped} className="mt-6 px-6 py-2" disabled={isProcessing}>
+            {isProcessing ? "Завантаження..." : "Завантажити JPEG"}
+          </Button>
         </>
       )}
     </div>

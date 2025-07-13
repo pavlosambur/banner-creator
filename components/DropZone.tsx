@@ -1,3 +1,6 @@
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 interface DropZoneProps {
   onFile: (file: File) => void;
   imageLoaded: boolean;
@@ -25,10 +28,10 @@ export default function DropZone({ onFile, imageLoaded }: DropZoneProps) {
       onDragOver={(e) => e.preventDefault()}
       className="w-full h-12 border-2 border-dashed border-gray-400 rounded-xl flex items-center justify-center text-gray-500 cursor-pointer"
     >
-      <label className="w-full h-full flex items-center justify-center cursor-pointer">
-        <input type="file" accept="image/*" onChange={handleChange} className="hidden" />
+      <Label className="w-full h-full flex items-center justify-center cursor-pointer">
+        <Input type="file" accept="image/*" onChange={handleChange} className="hidden" />
         {imageLoaded ? <span>Зображення завантажено 👇</span> : <span>Перетягни сюди зображення або клікни</span>}
-      </label>
+      </Label>
     </div>
   );
 }
