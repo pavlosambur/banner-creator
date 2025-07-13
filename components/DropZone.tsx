@@ -26,7 +26,7 @@ export default function DropZone({ onFile, imageLoaded }: DropZoneProps) {
     <div
       onDrop={handleDrop}
       onDragOver={(e) => e.preventDefault()}
-      className="w-full h-12 border-2 border-dashed border-gray-400 rounded-xl flex items-center justify-center text-gray-500 cursor-pointer"
+      className="w-full h-12 border-2 border-dashed border-gray-400 rounded-xl flex items-center justify-center text-gray-500 cursor-pointer mb-4"
     >
       <Label className="w-full h-full flex items-center justify-center cursor-pointer">
         <Input type="file" accept="image/*" onChange={handleChange} className="hidden" />

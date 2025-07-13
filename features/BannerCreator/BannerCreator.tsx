@@ -122,7 +122,7 @@ export default function BannerCreator() {
             onCropComplete={(_, cropped: Area) => setCroppedAreaPixels2(cropped)}
           />
           <ScaleSlider label="Масштаб:" value={zoom2} onChange={setZoom2} />
-          <Button onClick={showCropped} className="mt-6 px-6 py-2" disabled={isProcessing}>
+          <Button className="w-full inline-flex" onClick={showCropped} disabled={isProcessing}>
             {isProcessing ? "Завантаження..." : "Завантажити JPEG"}
           </Button>
         </>
