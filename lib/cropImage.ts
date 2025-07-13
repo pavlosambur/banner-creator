@@ -4,9 +4,16 @@ interface CropParams {
   format?: "image/png" | "image/jpeg";
 }
 
+interface Area {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export default function getCroppedImg(
   imageSrc: string,
-  crop: any,
+  crop: Area,
   fileName: string,
   options: CropParams
 ): Promise<string> {
@@ -18,12 +25,8 @@ export default function getCroppedImg(
     image.src = imageSrc;
 
     image.onload = () => {
-      // Завжди масштабуємо crop під targetWidth x targetHeight
       const cropW = crop.width;
       const cropH = crop.height;
-      console.log("[cropImage] crop:", crop);
-      console.log("[cropImage] cropW:", cropW, "cropH:", cropH);
-      console.log("[cropImage] targetWidth:", targetWidth, "targetHeight:", targetHeight);
       const canvas = document.createElement("canvas");
       canvas.width = targetWidth;
       canvas.height = targetHeight;

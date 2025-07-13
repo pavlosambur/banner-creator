@@ -6,14 +6,21 @@ import getCroppedImg from "@/lib/cropImage";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
+interface Area {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export default function BannerCreator() {
   const [image, setImage] = useState<string | null>(null);
   const [crop1, setCrop1] = useState({ x: 0, y: 0 });
   const [zoom1, setZoom1] = useState(1);
-  const [croppedAreaPixels1, setCroppedAreaPixels1] = useState<any>(null);
+  const [croppedAreaPixels1, setCroppedAreaPixels1] = useState<Area | null>(null);
   const [crop2, setCrop2] = useState({ x: 0, y: 0 });
   const [zoom2, setZoom2] = useState(1);
-  const [croppedAreaPixels2, setCroppedAreaPixels2] = useState<any>(null);
+  const [croppedAreaPixels2, setCroppedAreaPixels2] = useState<Area | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleFile = (file: File) => {
@@ -34,7 +41,7 @@ export default function BannerCreator() {
     const ctx = canvas.getContext("2d")!;
     ctx.drawImage(img, 0, 0);
     let quality = 1;
-    let step = 0.05;
+    const step = 0.05;
     const maxSizeBytes = 750 * 1024;
     const minQuality = 0.1;
     let resultBlob: Blob | null = null;
@@ -55,6 +62,7 @@ export default function BannerCreator() {
 
   const showCropped = async () => {
     if (!image || isProcessing) return;
+    if (!croppedAreaPixels1 || !croppedAreaPixels2) return;
     setIsProcessing(true);
     let clipboardText = "";
     try {
@@ -101,7 +109,7 @@ export default function BannerCreator() {
             aspect={800 / 256}
             onCropChange={setCrop1}
             onZoomChange={setZoom1}
-            onCropComplete={(_, cropped) => setCroppedAreaPixels1(cropped)}
+            onCropComplete={(_, cropped: Area) => setCroppedAreaPixels1(cropped)}
           />
           <ScaleSlider label="Масштаб:" value={zoom1} onChange={setZoom1} />
           <BannerCropper
@@ -111,7 +119,7 @@ export default function BannerCreator() {
             aspect={500 / 256}
             onCropChange={setCrop2}
             onZoomChange={setZoom2}
-            onCropComplete={(_, cropped) => setCroppedAreaPixels2(cropped)}
+            onCropComplete={(_, cropped: Area) => setCroppedAreaPixels2(cropped)}
           />
           <ScaleSlider label="Масштаб:" value={zoom2} onChange={setZoom2} />
           <Button onClick={showCropped} className="mt-6 px-6 py-2" disabled={isProcessing}>
@@ -122,4 +130,3 @@ export default function BannerCreator() {
     </div>
   );
 }
-// Видалити папку components/ImageDropZone після перевірки, що все працює через нові імпорти!
