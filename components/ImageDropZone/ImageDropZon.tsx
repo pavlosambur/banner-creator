@@ -42,17 +42,52 @@ export default function ImageDropZone() {
   const compressImage = async (url: string): Promise<Blob> => {
     const response = await fetch(url);
     const blob = await response.blob();
+    const img = await createImageBitmap(blob);
 
-    // Перетворюємо blob на file
-    const file = new File([blob], "image.png", { type: "image/png" });
+    console.log("[compressImage] before:", img.width, img.height);
 
-    const compressed = await imageCompression(file, {
-      maxSizeMB: 0.75,
-      useWebWorker: true,
-      fileType: "image/png",
-    });
+    // Створюємо canvas з оригінальними розмірами
+    const canvas = document.createElement("canvas");
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(img, 0, 0);
 
-    return compressed;
+    let quality = 1;
+    let step = 0.05;
+    const maxSizeBytes = 750 * 1024;
+    let attempt = 0;
+    const minQuality = 0.1;
+    let resultBlob: Blob | null = null;
+
+    while (true) {
+      // Конвертуємо canvas у JPEG Blob з заданою якістю
+      resultBlob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((blob) => resolve(blob), "image/jpeg", quality);
+      });
+
+      if (!resultBlob) throw new Error("Failed to create blob");
+
+      console.log(`[compressImage] try quality=${quality.toFixed(2)} size=${resultBlob.size}`);
+
+      if (resultBlob.size <= maxSizeBytes || quality <= minQuality) break;
+
+      quality -= step;
+      if (quality < minQuality) quality = minQuality;
+      attempt++;
+      if (attempt > 20) break;
+    }
+
+    // Фінальна перевірка розмірів
+    const finalImg = await createImageBitmap(resultBlob);
+    console.log("[compressImage] after:", finalImg.width, finalImg.height);
+
+    if (finalImg.width !== img.width || finalImg.height !== img.height) {
+      console.error("Помилка: розміри змінилися!");
+      // У цьому підході цього не повинно статися
+    }
+
+    return resultBlob;
   };
 
   const showCropped = async () => {
@@ -66,17 +101,17 @@ export default function ImageDropZone() {
       console.warn("Не вдалося прочитати з буфера:", err);
     }
 
-    // 2. Готуємо кропнуті PNG
+    // 2. Готуємо кропнуті JPEG
     const cropped1Url = await getCroppedImg(image, croppedAreaPixels1, "banner-800x256", {
       width: 1600,
       height: 512,
-      format: "image/png",
+      format: "image/jpeg",
     });
 
     const cropped2Url = await getCroppedImg(image, croppedAreaPixels2, "banner-500x256", {
       width: 1000,
       height: 512,
-      format: "image/png",
+      format: "image/jpeg",
     });
 
     const compressedBlob1 = await compressImage(cropped1Url);
@@ -87,8 +122,8 @@ export default function ImageDropZone() {
       .trim()
       .replaceAll(/\s+/g, "_")
       .replaceAll(/[^\w\-]/g, "");
-    const filename1 = `1600_${safeText || "banner1"}.png`;
-    const filename2 = `1000_${safeText || "banner2"}.png`;
+    const filename1 = `1600_${safeText || "banner1"}.jpg`;
+    const filename2 = `1000_${safeText || "banner2"}.jpg`;
 
     // 4. Скачуємо
     const link1 = document.createElement("a");

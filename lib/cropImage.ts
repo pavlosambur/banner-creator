@@ -21,21 +21,14 @@ export default function getCroppedImg(
       // Завжди масштабуємо crop під targetWidth x targetHeight
       const cropW = crop.width;
       const cropH = crop.height;
+      console.log("[cropImage] crop:", crop);
+      console.log("[cropImage] cropW:", cropW, "cropH:", cropH);
+      console.log("[cropImage] targetWidth:", targetWidth, "targetHeight:", targetHeight);
       const canvas = document.createElement("canvas");
       canvas.width = targetWidth;
       canvas.height = targetHeight;
       const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(
-        image,
-        crop.x,
-        crop.y,
-        cropW,
-        cropH,
-        0,
-        0,
-        targetWidth,
-        targetHeight
-      );
+      ctx.drawImage(image, crop.x, crop.y, cropW, cropH, 0, 0, targetWidth, targetHeight);
       canvas.toBlob((blob) => {
         if (!blob) return;
         const url = URL.createObjectURL(blob);
