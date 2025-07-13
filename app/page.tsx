@@ -1,9 +1,9 @@
-import ImageDropZone from "@/components/ImageDropZone/ImageDropZon";
+import BannerCreator from "@/features/BannerCreator";
 
 export default function Home() {
   return (
     <main>
-      <ImageDropZone />
+      <BannerCreator />
     </main>
   );
 }
