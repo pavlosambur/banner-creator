@@ -10,7 +10,7 @@ export default function getCroppedImg(
   fileName: string,
   options: CropParams
 ): Promise<string> {
-  const { width, height, format = "image/png" } = options;
+  const { width: targetWidth, height: targetHeight, format = "image/png" } = options;
 
   return new Promise((resolve) => {
     const image = new Image();
@@ -18,13 +18,24 @@ export default function getCroppedImg(
     image.src = imageSrc;
 
     image.onload = () => {
+      // Завжди масштабуємо crop під targetWidth x targetHeight
+      const cropW = crop.width;
+      const cropH = crop.height;
       const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
       const ctx = canvas.getContext("2d")!;
-
-      ctx.drawImage(image, crop.x, crop.y, crop.width, crop.height, 0, 0, width, height);
-
+      ctx.drawImage(
+        image,
+        crop.x,
+        crop.y,
+        cropW,
+        cropH,
+        0,
+        0,
+        targetWidth,
+        targetHeight
+      );
       canvas.toBlob((blob) => {
         if (!blob) return;
         const url = URL.createObjectURL(blob);
