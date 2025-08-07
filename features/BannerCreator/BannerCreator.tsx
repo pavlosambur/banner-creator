@@ -5,6 +5,7 @@ import ScaleSlider from "@/components/ScaleSlider";
 import getCroppedImg from "@/lib/cropImage";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { FILE_SUFFIX } from "@/config/fileSettings";
 
 interface Area {
   x: number;
@@ -84,8 +85,8 @@ export default function BannerCreator() {
       .trim()
       .replaceAll(/\s+/g, "_")
       .replaceAll(/[^\w\-]/g, "");
-    const filename1 = `1600_${safeText || "banner1"}.jpg`;
-    const filename2 = `1000_${safeText || "banner2"}.jpg`;
+    const filename1 = `1600_${safeText || "banner1"}${FILE_SUFFIX}.jpg`;
+    const filename2 = `1000_${safeText || "banner2"}${FILE_SUFFIX}.jpg`;
     const link1 = document.createElement("a");
     link1.download = filename1;
     link1.href = URL.createObjectURL(compressedBlob1);
