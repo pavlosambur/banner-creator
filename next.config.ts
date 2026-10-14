@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Вмикаємо standalone-вивід для продакшн-запуску в Docker
-  // Це створить .next/standalone/server.js, який запускаємо в рантайм-стейджі контейнера
+  // Standalone output for running in production inside Docker:
+  // produces .next/standalone/server.js, which the container's runtime stage starts
   output: "standalone",
 };
 
