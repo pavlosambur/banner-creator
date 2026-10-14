@@ -7,6 +7,12 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { FILE_SUFFIX } from "@/config/fileSettings";
 
+const TEXT = {
+  zoom: "Zoom:",
+  processing: "Processing...",
+  download: "Download JPEG",
+} as const;
+
 interface Area {
   x: number;
   y: number;
@@ -112,7 +118,7 @@ export default function BannerCreator() {
             onZoomChange={setZoom1}
             onCropComplete={(_, cropped: Area) => setCroppedAreaPixels1(cropped)}
           />
-          <ScaleSlider label="Масштаб:" value={zoom1} onChange={setZoom1} />
+          <ScaleSlider label={TEXT.zoom} value={zoom1} onChange={setZoom1} />
           <BannerCropper
             image={image}
             crop={crop2}
@@ -122,9 +128,9 @@ export default function BannerCreator() {
             onZoomChange={setZoom2}
             onCropComplete={(_, cropped: Area) => setCroppedAreaPixels2(cropped)}
           />
-          <ScaleSlider label="Масштаб:" value={zoom2} onChange={setZoom2} />
+          <ScaleSlider label={TEXT.zoom} value={zoom2} onChange={setZoom2} />
           <Button className="w-full inline-flex" onClick={showCropped} disabled={isProcessing}>
-            {isProcessing ? "Завантаження..." : "Завантажити JPEG"}
+            {isProcessing ? TEXT.processing : TEXT.download}
           </Button>
         </>
       )}
